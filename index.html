@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #eee;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(30, 30, 46, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .status-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        
+        .status-label {
+            font-size: 1.2em;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+        
+        .status-value {
+            font-size: 3em;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .status-alive {
+            color: #4ade80;
+            text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dead {
+            color: #f87171;
+            text-shadow: 0 0 20px rgba(248, 113, 113, 0.3);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .countdown {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            color: #4ade80;
+        }
+        
+        .timestamp {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 15px;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .error {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 System Status</h1>
+        
+        <div class="status-card">
+            <div class="status-label">Current Status</div>
+            <div class="status-value" id="statusValue">
+                <span>Loading...</span>
+            </div>
+            <div class="countdown" id="countdown" style="display: none;"></div>
+            <div class="timestamp" id="timestamp"></div>
+            <div class="error" id="error" style="display: none;"></div>
+        </div>
+        
+        <div class="footer">
+            Connected to vps5.eas-x.com:13057<br>
+            Auto-refreshes every 3 seconds
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://vps5.eas-x.com:13057/status';
+        let countdownInterval = null;
+        
+        async function fetchStatus() {
+            try {
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                updateUI(data);
+                document.getElementById('error').style.display = 'none';
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerHTML = '⚠️ Cannot connect to VPS server<br><small>Make sure the server is running on vps5.eas-x.com:13057</small>';
+                document.getElementById('statusValue').innerHTML = '❌ OFFLINE';
+                document.getElementById('statusValue').className = 'status-value status-dead';
+                if (countdownInterval) clearInterval(countdownInterval);
+                document.getElementById('countdown').style.display = 'none';
+            }
+        }
+        
+        function updateUI(data) {
+            const statusValue = document.getElementById('statusValue');
+            const timestamp = document.getElementById('timestamp');
+            const countdownElem = document.getElementById('countdown');
+            
+            if (data.alive) {
+                statusValue.innerHTML = '✅ ALIVE';
+                statusValue.className = 'status-value status-alive';
+                countdownElem.style.display = 'block';
+                countdownElem.innerHTML = `⏱️ ${data.time_remaining}s`;
+                timestamp.innerHTML = `Last signal: ${data.last_heartbeat ? new Date(data.last_heartbeat).toLocaleTimeString() : 'Never'}`;
+                
+                if (countdownInterval) clearInterval(countdownInterval);
+                let remaining = data.time_remaining;
+                countdownInterval = setInterval(() => {
+                    remaining -= 1;
+                    if (remaining <= 0) {
+                        clearInterval(countdownInterval);
+                        fetchStatus();
+                    } else {
+                        countdownElem.innerHTML = `⏱️ ${Math.max(0, remaining).toFixed(0)}s`;
+                    }
+                }, 1000);
+            } else {
+                statusValue.innerHTML = '❌ DEAD';
+                statusValue.className = 'status-value status-dead';
+                countdownElem.style.display = 'none';
+                if (countdownInterval) clearInterval(countdownInterval);
+                timestamp.innerHTML = data.last_heartbeat ? 
+                    `Last signal: ${new Date(data.last_heartbeat).toLocaleTimeString()} (expired)` : 
+                    'No signal received';
+            }
+        }
+        
+        // Fetch status every 3 seconds
+        fetchStatus();
+        setInterval(fetchStatus, 3000);
+    </script>
+</body>
+</html>
