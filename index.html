@@ -131,20 +131,19 @@
     </div>
     
     <script>
-        // Your working PythonAnywhere API
-        const API_URL = 'https://Sxm19J.pythonanywhere.com/status';
+        // Your PythonAnywhere API
+        const REAL_API = 'https://Sxm19J.pythonanywhere.com/status';
+        
+        // Using corsproxy.io - Free, no API key needed for development
+        const PROXY = 'https://corsproxy.io/?';
+        const API_URL = PROXY + encodeURIComponent(REAL_API);
+        
         let countdownInterval = null;
         
         async function fetchStatus() {
             try {
-                // Simple GET request - same as Postman
-                const response = await fetch(API_URL, {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
+                console.log('Fetching from proxy...');
+                const response = await fetch(API_URL);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
@@ -157,7 +156,7 @@
             } catch (error) {
                 console.error('Fetch error:', error);
                 document.getElementById('error').style.display = 'block';
-                document.getElementById('error').innerHTML = '⚠️ CORS Error - Cannot fetch from API<br><small>Try opening the API directly: <a href="' + API_URL + '" target="_blank">' + API_URL + '</a></small>';
+                document.getElementById('error').innerHTML = '⚠️ Cannot fetch status<br><small>Make sure PythonAnywhere is running</small>';
                 document.getElementById('statusValue').innerHTML = '❌ ERROR';
                 document.getElementById('statusValue').className = 'status-value status-dead';
                 if (countdownInterval) clearInterval(countdownInterval);
@@ -199,8 +198,7 @@
             }
         }
         
-        // Test the API directly first
-        console.log('Fetching from:', API_URL);
+        // Fetch immediately and every 3 seconds
         fetchStatus();
         setInterval(fetchStatus, 3000);
     </script>
