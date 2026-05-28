@@ -108,6 +108,12 @@
             margin-top: 15px;
             font-size: 0.9em;
         }
+        
+        .retry {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -131,20 +137,71 @@
     </div>
     
     <script>
-        const API_URL = 'https://Sxm19J.pythonanywhere.com/status';
+        // Your VPS endpoint
+        const VPS_URL = 'http://vps5.eas-x.com:13057/status';
+        
+        // Free CORS proxies (tries multiple if one fails)
+        const CORS_PROXIES = [
+            'https://api.allorigins.win/raw?url=',
+            'https://cors-anywhere.herokuapp.com/',
+            'https://cors.bridged.cc/',
+            'https://proxy.cors.sh/'
+        ];
+        
+        let currentProxyIndex = 0;
         let countdownInterval = null;
+        
+        async function fetchWithCors(url, proxyIndex = 0) {
+            if (proxyIndex >= CORS_PROXIES.length) {
+                // No more proxies, try direct
+                return fetch(url, { mode: 'cors' });
+            }
+            
+            const proxy = CORS_PROXIES[proxyIndex];
+            const proxyUrl = proxy + encodeURIComponent(url);
+            
+            try {
+                const response = await fetch(proxyUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    return response;
+                }
+                throw new Error(`Proxy ${proxyIndex} failed`);
+            } catch (error) {
+                // Try next proxy
+                console.log(`Proxy ${proxyIndex} failed, trying next...`);
+                return fetchWithCors(url, proxyIndex + 1);
+            }
+        }
         
         async function fetchStatus() {
             try {
-                const response = await fetch(API_URL);
+                let response;
+                let data;
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                // Try with CORS proxies first
+                try {
+                    response = await fetchWithCors(VPS_URL, 0);
+                    data = await response.json();
+                } catch (proxyError) {
+                    // Try direct as fallback
+                    console.log('All proxies failed, trying direct...');
+                    response = await fetch(VPS_URL, { mode: 'no-cors' });
+                    // With no-cors, we can't read the response, so we need to simulate
+                    data = { alive: false, status: 'UNKNOWN' };
                 }
                 
-                const data = await response.json();
-                updateUI(data);
-                document.getElementById('error').style.display = 'none';
+                if (data && data.alive !== undefined) {
+                    updateUI(data);
+                    document.getElementById('error').style.display = 'none';
+                } else {
+                    throw new Error('Invalid response');
+                }
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('error').style.display = 'block';
@@ -190,7 +247,7 @@
             }
         }
         
-        // Fetch status every 3 seconds
+        // Fetch every 3 seconds
         fetchStatus();
         setInterval(fetchStatus, 3000);
     </script>
