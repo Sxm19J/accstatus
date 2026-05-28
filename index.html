@@ -27,7 +27,6 @@
             gap: 20px;
         }
         
-        /* Status Panel */
         .status-panel {
             background: rgba(0, 0, 0, 0.8);
             border-radius: 15px;
@@ -36,7 +35,6 @@
             backdrop-filter: blur(10px);
         }
         
-        /* Executor Panel */
         .executor-panel {
             background: rgba(0, 0, 0, 0.85);
             border-radius: 15px;
@@ -119,7 +117,6 @@
             margin-top: 10px;
         }
         
-        /* Executor Styles */
         .editor-toolbar {
             background: #1e1e2e;
             border-radius: 8px 8px 0 0;
@@ -237,7 +234,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Status Monitor Panel -->
         <div class="status-panel">
             <h1>🔔 System Status</h1>
             <div class="status-card">
@@ -254,7 +250,6 @@
             </div>
         </div>
         
-        <!-- Roblox Executor Panel -->
         <div class="executor-panel">
             <h1>🚀 Script Executor</h1>
             <div class="editor-toolbar">
@@ -266,7 +261,6 @@
             <div id="executorMessage" style="margin-top: 10px;"></div>
         </div>
         
-        <!-- Current Script Display -->
         <div class="script-panel">
             <h2>📜 Last Executed Script</h2>
             <div class="script-display" id="scriptDisplay">
@@ -280,16 +274,18 @@
     </div>
     
     <script>
-        // Configuration
         const REAL_API = 'https://Sxm19J.pythonanywhere.com';
         const PROXY = 'https://corsproxy.io/?';
         
         let countdownInterval = null;
         
-        // Fetch status from API
+        function getProxiedUrl(endpoint) {
+            return PROXY + encodeURIComponent(REAL_API + endpoint);
+        }
+        
         async function fetchStatus() {
             try {
-                const response = await fetch(PROXY + encodeURIComponent(REAL_API + '/status'));
+                const response = await fetch(getProxiedUrl('/status'));
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 updateStatusUI(data);
@@ -336,39 +332,28 @@
             }
         }
         
-        // Fetch current script from API
         async function fetchScript() {
             try {
-                const response = await fetch(PROXY + encodeURIComponent(REAL_API + '/script'));
+                const response = await fetch(getProxiedUrl('/script'));
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-                document.getElementById('scriptDisplay').innerHTML = escapeHtml(data.script);
-                if (data.last_execution) {
-                    const lastExec = new Date(data.last_execution).toLocaleString();
-                    // Add last execution time to script display
-                    const timeElem = document.createElement('div');
-                    timeElem.style.marginTop = '10px';
-                    timeElem.style.color = '#888';
-                    timeElem.style.fontSize = '0.8em';
-                    timeElem.innerHTML = `Last executed: ${lastExec}`;
-                    const existingTime = document.querySelector('.script-time');
-                    if (existingTime) existingTime.remove();
-                    timeElem.className = 'script-time';
-                    document.getElementById('scriptDisplay').parentNode.appendChild(timeElem);
+                if (data.status === 'success') {
+                    document.getElementById('scriptDisplay').innerHTML = escapeHtml(data.script);
+                } else {
+                    document.getElementById('scriptDisplay').innerHTML = 'No script loaded';
                 }
             } catch (error) {
                 console.error('Fetch script error:', error);
-                document.getElementById('scriptDisplay').innerHTML = 'Error loading script';
+                document.getElementById('scriptDisplay').innerHTML = 'Error loading script - ' + error.message;
             }
         }
         
-        // Fetch execution history
         async function fetchHistory() {
             try {
-                const response = await fetch(PROXY + encodeURIComponent(REAL_API + '/executor'));
+                const response = await fetch(getProxiedUrl('/executor'));
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-                if (data.history && data.history.length > 0) {
+                if (data.status === 'success' && data.history && data.history.length > 0) {
                     const historyHtml = data.history.map(item => `
                         <div class="history-item">
                             <div class="history-time">${new Date(item.timestamp).toLocaleString()}</div>
@@ -385,7 +370,6 @@
             }
         }
         
-        // Execute script (send to API)
         async function executeScript() {
             const script = document.getElementById('scriptEditor').value;
             if (!script.trim()) {
@@ -396,7 +380,7 @@
             showMessage('Executing script...', 'success');
             
             try {
-                const response = await fetch(PROXY + encodeURIComponent(REAL_API + '/executor'), {
+                const response = await fetch(getProxiedUrl('/executor'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -462,7 +446,7 @@ print("Player healed!")`;
         // Refresh intervals
         setInterval(fetchStatus, 3000);
         setInterval(fetchScript, 5000);
-        setInterval(fetchHistory, 10000);
+        setInterval(fetchHistory, 5000);
     </script>
 </body>
 </html>
