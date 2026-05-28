@@ -169,7 +169,11 @@
             const timestamp = document.getElementById('timestamp');
             const countdownElem = document.getElementById('countdown');
             
-            if (data.alive) {
+            // FIX: Check time_remaining instead of alive flag
+            // If time_remaining is 0 or less, show DEAD
+            const isActuallyAlive = data.alive && data.time_remaining > 0;
+            
+            if (isActuallyAlive) {
                 statusValue.innerHTML = '✅ ALIVE';
                 statusValue.className = 'status-value status-alive';
                 countdownElem.style.display = 'block';
