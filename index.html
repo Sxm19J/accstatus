@@ -224,12 +224,15 @@
         let countdownInterval = null;
         
         function getProxiedUrl(endpoint) {
-            return PROXY + encodeURIComponent(REAL_API + endpoint);
+            // Add cache-buster timestamp to force fresh data
+            const cacheBuster = Date.now();
+            const fullUrl = REAL_API + endpoint + '?_=' + cacheBuster;
+            return PROXY + encodeURIComponent(fullUrl);
         }
         
         async function fetchStatus() {
             try {
-                console.log('Fetching status...');
+                console.log('Fetching status at:', new Date().toLocaleTimeString());
                 const response = await fetch(getProxiedUrl('/status'));
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
@@ -253,20 +256,20 @@
                 statusValue.innerHTML = '✅ ALIVE';
                 statusValue.className = 'status-value status-alive';
                 countdownElem.style.display = 'block';
-                countdownElem.innerHTML = `⏱️ ${data.time_remaining}s`;
+                countdownElem.innerHTML = `⏱️ ${data.time_remaining.toFixed(1)}s`;
                 timestamp.innerHTML = `Last signal: ${data.last_heartbeat ? new Date(data.last_heartbeat).toLocaleTimeString() : 'Never'}`;
                 
                 if (countdownInterval) clearInterval(countdownInterval);
                 let remaining = data.time_remaining;
                 countdownInterval = setInterval(() => {
-                    remaining -= 1;
+                    remaining -= 0.1;
                     if (remaining <= 0) {
                         clearInterval(countdownInterval);
                         fetchStatus();
                     } else {
-                        countdownElem.innerHTML = `⏱️ ${Math.max(0, remaining).toFixed(0)}s`;
+                        countdownElem.innerHTML = `⏱️ ${Math.max(0, remaining).toFixed(1)}s`;
                     }
-                }, 1000);
+                }, 100);
             } else {
                 statusValue.innerHTML = '❌ DEAD';
                 statusValue.className = 'status-value status-dead';
