@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Status Monitor</title>
+    <title>Roblox Executor - Status Monitor</title>
     <style>
         * {
             margin: 0;
@@ -13,29 +13,49 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             color: #eee;
             padding: 20px;
         }
         
         .container {
-            background: rgba(30, 30, 46, 0.95);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            text-align: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        /* Status Panel */
+        .status-panel {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            max-width: 500px;
-            width: 100%;
+        }
+        
+        /* Executor Panel */
+        .executor-panel {
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .script-panel {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            backdrop-filter: blur(10px);
+            grid-column: span 2;
         }
         
         h1 {
-            font-size: 2.5em;
+            font-size: 1.8em;
             margin-bottom: 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
@@ -43,25 +63,30 @@
             background-clip: text;
         }
         
+        h2 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
         .status-card {
-            background: rgba(0,0,0,0.3);
-            border-radius: 15px;
-            padding: 30px;
-            margin: 30px 0;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
         }
         
         .status-label {
-            font-size: 1.2em;
+            font-size: 1em;
             color: #aaa;
             margin-bottom: 10px;
         }
         
         .status-value {
-            font-size: 3em;
+            font-size: 2.5em;
             font-weight: bold;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
-            transition: all 0.3s ease;
         }
         
         .status-alive {
@@ -81,23 +106,98 @@
         }
         
         .countdown {
-            font-size: 2em;
+            font-size: 1.5em;
             font-weight: bold;
-            margin: 20px 0;
+            margin: 15px 0;
             font-family: 'Courier New', monospace;
             color: #4ade80;
         }
         
         .timestamp {
-            font-size: 0.9em;
+            font-size: 0.8em;
             color: #888;
-            margin-top: 15px;
+            margin-top: 10px;
         }
         
-        .footer {
-            margin-top: 20px;
-            font-size: 0.8em;
-            color: #666;
+        /* Executor Styles */
+        .editor-toolbar {
+            background: #1e1e2e;
+            border-radius: 8px 8px 0 0;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            border: 1px solid #333;
+        }
+        
+        .toolbar-btn {
+            background: #2d2d44;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        
+        .toolbar-btn:hover {
+            background: #3d3d5c;
+            transform: translateY(-1px);
+        }
+        
+        .execute-btn {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: #000;
+            font-weight: bold;
+        }
+        
+        .execute-btn:hover {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            background: #0a0a0f;
+            color: #4ade80;
+            border: 1px solid #333;
+            border-radius: 0 0 8px 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .script-display {
+            background: #0a0a0f;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #4ade80;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+        
+        .history-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+        }
+        
+        .history-time {
+            color: #667eea;
+            font-size: 0.75em;
         }
         
         .error {
@@ -108,69 +208,103 @@
             margin-top: 15px;
             font-size: 0.9em;
         }
+        
+        .success {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        
+        .footer {
+            margin-top: 20px;
+            font-size: 0.75em;
+            color: #666;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .script-panel {
+                grid-column: span 1;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔔 System Status</h1>
-        
-        <div class="status-card">
-            <div class="status-label">Current Status</div>
-            <div class="status-value" id="statusValue">
-                <span>Loading...</span>
+        <!-- Status Monitor Panel -->
+        <div class="status-panel">
+            <h1>🔔 System Status</h1>
+            <div class="status-card">
+                <div class="status-label">Current Status</div>
+                <div class="status-value" id="statusValue">
+                    <span>Loading...</span>
+                </div>
+                <div class="countdown" id="countdown" style="display: none;"></div>
+                <div class="timestamp" id="timestamp"></div>
             </div>
-            <div class="countdown" id="countdown" style="display: none;"></div>
-            <div class="timestamp" id="timestamp"></div>
-            <div class="error" id="error" style="display: none;"></div>
+            <div class="footer">
+                Connected to PythonAnywhere API<br>
+                Auto-refreshes every 3 seconds
+            </div>
         </div>
         
-        <div class="footer">
-            Connected to PythonAnywhere API<br>
-            Auto-refreshes every 3 seconds
+        <!-- Roblox Executor Panel -->
+        <div class="executor-panel">
+            <h1>🚀 Script Executor</h1>
+            <div class="editor-toolbar">
+                <button class="toolbar-btn" onclick="clearEditor()">Clear</button>
+                <button class="toolbar-btn" onclick="loadExample()">Load Example</button>
+                <button class="toolbar-btn execute-btn" onclick="executeScript()">▶ Execute</button>
+            </div>
+            <textarea id="scriptEditor" placeholder="-- Write your Lua script here&#10;-- Example:&#10;print('Hello from Roblox!')&#10;game.Players.LocalPlayer.Character.Humanoid.Health = 100"></textarea>
+            <div id="executorMessage" style="margin-top: 10px;"></div>
+        </div>
+        
+        <!-- Current Script Display -->
+        <div class="script-panel">
+            <h2>📜 Last Executed Script</h2>
+            <div class="script-display" id="scriptDisplay">
+                Loading...
+            </div>
+            <div style="margin-top: 20px;">
+                <h2>📋 Execution History</h2>
+                <div id="historyDisplay"></div>
+            </div>
         </div>
     </div>
     
     <script>
-        // Your PythonAnywhere API
-        const REAL_API = 'https://Sxm19J.pythonanywhere.com/status';
-        
-        // Using corsproxy.io - Free, no API key needed for development
+        // Configuration
+        const REAL_API = 'https://Sxm19J.pythonanywhere.com';
         const PROXY = 'https://corsproxy.io/?';
-        const API_URL = PROXY + encodeURIComponent(REAL_API);
         
         let countdownInterval = null;
         
+        // Fetch status from API
         async function fetchStatus() {
             try {
-                console.log('Fetching from proxy...');
-                const response = await fetch(API_URL);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
+                const response = await fetch(PROXY + encodeURIComponent(REAL_API + '/status'));
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-                console.log('API Response:', data);
-                updateUI(data);
-                document.getElementById('error').style.display = 'none';
+                updateStatusUI(data);
             } catch (error) {
-                console.error('Fetch error:', error);
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('error').innerHTML = '⚠️ Cannot fetch status<br><small>Make sure PythonAnywhere is running</small>';
-                document.getElementById('statusValue').innerHTML = '❌ ERROR';
+                console.error('Status error:', error);
+                document.getElementById('statusValue').innerHTML = '❌ OFFLINE';
                 document.getElementById('statusValue').className = 'status-value status-dead';
-                if (countdownInterval) clearInterval(countdownInterval);
-                document.getElementById('countdown').style.display = 'none';
             }
         }
         
-        function updateUI(data) {
+        function updateStatusUI(data) {
             const statusValue = document.getElementById('statusValue');
             const timestamp = document.getElementById('timestamp');
             const countdownElem = document.getElementById('countdown');
             
-            // FIX: Check time_remaining instead of alive flag
-            // If time_remaining is 0 or less, show DEAD
             const isActuallyAlive = data.alive && data.time_remaining > 0;
             
             if (isActuallyAlive) {
@@ -202,9 +336,133 @@
             }
         }
         
-        // Fetch immediately and every 3 seconds
+        // Fetch current script from API
+        async function fetchScript() {
+            try {
+                const response = await fetch(PROXY + encodeURIComponent(REAL_API + '/script'));
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                document.getElementById('scriptDisplay').innerHTML = escapeHtml(data.script);
+                if (data.last_execution) {
+                    const lastExec = new Date(data.last_execution).toLocaleString();
+                    // Add last execution time to script display
+                    const timeElem = document.createElement('div');
+                    timeElem.style.marginTop = '10px';
+                    timeElem.style.color = '#888';
+                    timeElem.style.fontSize = '0.8em';
+                    timeElem.innerHTML = `Last executed: ${lastExec}`;
+                    const existingTime = document.querySelector('.script-time');
+                    if (existingTime) existingTime.remove();
+                    timeElem.className = 'script-time';
+                    document.getElementById('scriptDisplay').parentNode.appendChild(timeElem);
+                }
+            } catch (error) {
+                console.error('Fetch script error:', error);
+                document.getElementById('scriptDisplay').innerHTML = 'Error loading script';
+            }
+        }
+        
+        // Fetch execution history
+        async function fetchHistory() {
+            try {
+                const response = await fetch(PROXY + encodeURIComponent(REAL_API + '/executor'));
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if (data.history && data.history.length > 0) {
+                    const historyHtml = data.history.map(item => `
+                        <div class="history-item">
+                            <div class="history-time">${new Date(item.timestamp).toLocaleString()}</div>
+                            <div style="margin-top: 5px;">${escapeHtml(item.script)}</div>
+                        </div>
+                    `).join('');
+                    document.getElementById('historyDisplay').innerHTML = historyHtml;
+                } else {
+                    document.getElementById('historyDisplay').innerHTML = '<div class="history-item">No executions yet</div>';
+                }
+            } catch (error) {
+                console.error('Fetch history error:', error);
+                document.getElementById('historyDisplay').innerHTML = '<div class="history-item">Error loading history</div>';
+            }
+        }
+        
+        // Execute script (send to API)
+        async function executeScript() {
+            const script = document.getElementById('scriptEditor').value;
+            if (!script.trim()) {
+                showMessage('Please enter a script to execute', 'error');
+                return;
+            }
+            
+            showMessage('Executing script...', 'success');
+            
+            try {
+                const response = await fetch(PROXY + encodeURIComponent(REAL_API + '/executor'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ script: script })
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showMessage('✅ Script executed successfully!', 'success');
+                    document.getElementById('scriptEditor').value = '';
+                    fetchScript();
+                    fetchHistory();
+                } else {
+                    showMessage('❌ Execution failed: ' + data.message, 'error');
+                }
+            } catch (error) {
+                console.error('Execute error:', error);
+                showMessage('❌ Failed to execute script: ' + error.message, 'error');
+            }
+        }
+        
+        function clearEditor() {
+            document.getElementById('scriptEditor').value = '';
+            showMessage('Editor cleared', 'success');
+        }
+        
+        function loadExample() {
+            const exampleScript = `-- Example Roblox Script
+-- Heal player
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+humanoid.Health = humanoid.MaxHealth
+print("Player healed!")`;
+            
+            document.getElementById('scriptEditor').value = exampleScript;
+            showMessage('Example script loaded', 'success');
+        }
+        
+        function showMessage(msg, type) {
+            const msgDiv = document.getElementById('executorMessage');
+            msgDiv.innerHTML = `<div class="${type}">${msg}</div>`;
+            setTimeout(() => {
+                msgDiv.innerHTML = '';
+            }, 3000);
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Initial loads
         fetchStatus();
+        fetchScript();
+        fetchHistory();
+        
+        // Refresh intervals
         setInterval(fetchStatus, 3000);
+        setInterval(fetchScript, 5000);
+        setInterval(fetchHistory, 10000);
     </script>
 </body>
 </html>
