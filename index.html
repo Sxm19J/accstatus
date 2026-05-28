@@ -131,27 +131,34 @@
     </div>
     
     <script>
-        // Using your working PythonAnywhere API
+        // Your working PythonAnywhere API
         const API_URL = 'https://Sxm19J.pythonanywhere.com/status';
         let countdownInterval = null;
         
         async function fetchStatus() {
             try {
-                const response = await fetch(API_URL);
+                // Simple GET request - same as Postman
+                const response = await fetch(API_URL, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
                 
                 const data = await response.json();
-                console.log('Status:', data.status);
+                console.log('API Response:', data);
                 updateUI(data);
                 document.getElementById('error').style.display = 'none';
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Fetch error:', error);
                 document.getElementById('error').style.display = 'block';
-                document.getElementById('error').innerHTML = '⚠️ Cannot connect to API<br><small>Make sure PythonAnywhere is running</small>';
-                document.getElementById('statusValue').innerHTML = '❌ OFFLINE';
+                document.getElementById('error').innerHTML = '⚠️ CORS Error - Cannot fetch from API<br><small>Try opening the API directly: <a href="' + API_URL + '" target="_blank">' + API_URL + '</a></small>';
+                document.getElementById('statusValue').innerHTML = '❌ ERROR';
                 document.getElementById('statusValue').className = 'status-value status-dead';
                 if (countdownInterval) clearInterval(countdownInterval);
                 document.getElementById('countdown').style.display = 'none';
@@ -192,7 +199,8 @@
             }
         }
         
-        // Fetch immediately and every 3 seconds
+        // Test the API directly first
+        console.log('Fetching from:', API_URL);
         fetchStatus();
         setInterval(fetchStatus, 3000);
     </script>
