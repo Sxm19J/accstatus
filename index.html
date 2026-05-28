@@ -212,7 +212,7 @@
                 <button class="toolbar-btn" onclick="loadExample()">Load Example</button>
                 <button class="toolbar-btn execute-btn" onclick="executeScript()">▶ Execute</button>
             </div>
-            <textarea id="scriptEditor" placeholder="-- Write your Lua script here&#10;-- Example:&#10;print('Hello from Roblox!')&#10;game.Players.LocalPlayer.Character.Humanoid.Health = 100"></textarea>
+            <textarea id="scriptEditor" placeholder="-- Write your Lua script here&#10;-- Example:&#10;print('Website connected')"></textarea>
             <div id="executorMessage" style="margin-top: 10px;"></div>
         </div>
     </div>
@@ -229,9 +229,11 @@
         
         async function fetchStatus() {
             try {
+                console.log('Fetching status...');
                 const response = await fetch(getProxiedUrl('/status'));
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
+                console.log('Status data:', data);
                 updateStatusUI(data);
             } catch (error) {
                 console.error('Status error:', error);
@@ -315,8 +317,8 @@
         }
         
         function loadExample() {
-            const exampleScript = `-- Example Roblox Script
-print("Website is working!")
+            const exampleScript = `-- Example Script
+print("Website connected")`;
             
             document.getElementById('scriptEditor').value = exampleScript;
             showMessage('Example script loaded', 'success');
@@ -331,9 +333,10 @@ print("Website is working!")
         }
         
         // Initial load
+        console.log('Starting status monitor...');
         fetchStatus();
         
-        // Refresh intervals
+        // Refresh status every 3 seconds
         setInterval(fetchStatus, 3000);
     </script>
 </body>
