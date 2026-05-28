@@ -20,7 +20,7 @@
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -43,15 +43,6 @@
             backdrop-filter: blur(10px);
         }
         
-        .script-panel {
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 15px;
-            padding: 25px;
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            backdrop-filter: blur(10px);
-            grid-column: span 2;
-        }
-        
         h1 {
             font-size: 1.8em;
             margin-bottom: 20px;
@@ -59,12 +50,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-        }
-        
-        h2 {
-            font-size: 1.3em;
-            margin-bottom: 15px;
-            color: #667eea;
         }
         
         .status-card {
@@ -154,7 +139,7 @@
         
         textarea {
             width: 100%;
-            height: 300px;
+            height: 400px;
             background: #0a0a0f;
             color: #4ade80;
             border: 1px solid #333;
@@ -168,33 +153,6 @@
         textarea:focus {
             outline: none;
             border-color: #667eea;
-        }
-        
-        .script-display {
-            background: #0a0a0f;
-            border-radius: 8px;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            color: #4ade80;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #333;
-        }
-        
-        .history-item {
-            background: rgba(255,255,255,0.05);
-            border-radius: 5px;
-            padding: 10px;
-            margin-bottom: 10px;
-            font-size: 0.85em;
-        }
-        
-        .history-time {
-            color: #667eea;
-            font-size: 0.75em;
         }
         
         .error {
@@ -226,9 +184,6 @@
             .container {
                 grid-template-columns: 1fr;
             }
-            .script-panel {
-                grid-column: span 1;
-            }
         }
     </style>
 </head>
@@ -259,17 +214,6 @@
             </div>
             <textarea id="scriptEditor" placeholder="-- Write your Lua script here&#10;-- Example:&#10;print('Hello from Roblox!')&#10;game.Players.LocalPlayer.Character.Humanoid.Health = 100"></textarea>
             <div id="executorMessage" style="margin-top: 10px;"></div>
-        </div>
-        
-        <div class="script-panel">
-            <h2>📜 Last Executed Script</h2>
-            <div class="script-display" id="scriptDisplay">
-                Loading...
-            </div>
-            <div style="margin-top: 20px;">
-                <h2>📋 Execution History</h2>
-                <div id="historyDisplay"></div>
-            </div>
         </div>
     </div>
     
@@ -332,44 +276,6 @@
             }
         }
         
-        async function fetchScript() {
-            try {
-                const response = await fetch(getProxiedUrl('/script'));
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                if (data.status === 'success') {
-                    document.getElementById('scriptDisplay').innerHTML = escapeHtml(data.script);
-                } else {
-                    document.getElementById('scriptDisplay').innerHTML = 'No script loaded';
-                }
-            } catch (error) {
-                console.error('Fetch script error:', error);
-                document.getElementById('scriptDisplay').innerHTML = 'Error loading script - ' + error.message;
-            }
-        }
-        
-        async function fetchHistory() {
-            try {
-                const response = await fetch(getProxiedUrl('/executor'));
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                if (data.status === 'success' && data.history && data.history.length > 0) {
-                    const historyHtml = data.history.map(item => `
-                        <div class="history-item">
-                            <div class="history-time">${new Date(item.timestamp).toLocaleString()}</div>
-                            <div style="margin-top: 5px;">${escapeHtml(item.script)}</div>
-                        </div>
-                    `).join('');
-                    document.getElementById('historyDisplay').innerHTML = historyHtml;
-                } else {
-                    document.getElementById('historyDisplay').innerHTML = '<div class="history-item">No executions yet</div>';
-                }
-            } catch (error) {
-                console.error('Fetch history error:', error);
-                document.getElementById('historyDisplay').innerHTML = '<div class="history-item">Error loading history</div>';
-            }
-        }
-        
         async function executeScript() {
             const script = document.getElementById('scriptEditor').value;
             if (!script.trim()) {
@@ -377,7 +283,7 @@
                 return;
             }
             
-            showMessage('Executing script...', 'success');
+            showMessage('Sending script to Roblox...', 'success');
             
             try {
                 const response = await fetch(getProxiedUrl('/executor'), {
@@ -392,16 +298,14 @@
                 
                 const data = await response.json();
                 if (data.status === 'success') {
-                    showMessage('✅ Script executed successfully!', 'success');
+                    showMessage('✅ Script sent to Roblox! It will execute within 5 seconds.', 'success');
                     document.getElementById('scriptEditor').value = '';
-                    fetchScript();
-                    fetchHistory();
                 } else {
-                    showMessage('❌ Execution failed: ' + data.message, 'error');
+                    showMessage('❌ Failed: ' + data.message, 'error');
                 }
             } catch (error) {
                 console.error('Execute error:', error);
-                showMessage('❌ Failed to execute script: ' + error.message, 'error');
+                showMessage('❌ Failed to send script: ' + error.message, 'error');
             }
         }
         
@@ -412,13 +316,7 @@
         
         function loadExample() {
             const exampleScript = `-- Example Roblox Script
--- Heal player
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-
-humanoid.Health = humanoid.MaxHealth
-print("Player healed!")`;
+print("Website is working!")
             
             document.getElementById('scriptEditor').value = exampleScript;
             showMessage('Example script loaded', 'success');
@@ -432,21 +330,11 @@ print("Player healed!")`;
             }, 3000);
         }
         
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Initial loads
+        // Initial load
         fetchStatus();
-        fetchScript();
-        fetchHistory();
         
         // Refresh intervals
         setInterval(fetchStatus, 3000);
-        setInterval(fetchScript, 5000);
-        setInterval(fetchHistory, 5000);
     </script>
 </body>
 </html>
